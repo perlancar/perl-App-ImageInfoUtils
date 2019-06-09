@@ -29,6 +29,15 @@ our %arg0_file = (
     },
 );
 
+our %argopt_quiet = (
+    quiet => {
+        summary => "Don't output anything on command-line, ".
+            "just return appropriate exit code",
+        schema => 'true*',
+        cmdline_aliases => {q=>{}, silent=>{}},
+    },
+);
+
 $SPEC{image_info} = {
     v => 1.1,
     summary => 'Get information about image files',
@@ -67,7 +76,17 @@ $SPEC{image_is_portrait} = {
 _
     args => {
         %arg0_file,
+        %argopt_quiet,
     },
+    examples => [
+        {
+            summary => 'Produce smaller version of portrait images',
+            src => 'for f in *[0-9].jpg;do [[prog]] -q "$f" && convert "$f" -resize 20% "${f/.jpg/.small.jpg}"; done',
+            src_plang => 'bash',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+    ],
 };
 sub image_is_portrait {
     my %args = @_;
@@ -82,7 +101,12 @@ sub image_is_portrait {
     return [412, "Can't determine image width x height"] unless $width && $height;
     my $is_portrait = ($orientation =~ /\A(left|right)_/ ? 1:0) ^ ($width <= $height ? 1:0) ? 1:0;
 
-    [200, "OK", $is_portrait, {'cmdline.exit_code' => $is_portrait ? 0:1, 'cmdline.result' => ''}];
+    [200, "OK", $is_portrait, {
+        'cmdline.exit_code' => $is_portrait ? 0:1,
+        'cmdline.result' => $args{quiet} ? '' :
+            'Image is '.
+            ($is_portrait ? "portrait" : "NOT portrait (landscape)"),
+    }];
 }
 
 $SPEC{image_is_landscape} = {
@@ -93,7 +117,17 @@ $SPEC{image_is_landscape} = {
 _
     args => {
         %arg0_file,
+        %argopt_quiet,
     },
+    examples => [
+        {
+            summary => 'Move all landscape images to landscape/',
+            src => 'for f in *.jpg;do [[prog]] -q "$f" && mv "$f" landscape/; done',
+            src_plang => 'bash',
+            test => 0,
+            'x.doc.show_result' => 0,
+        },
+    ],
 };
 sub image_is_landscape {
     my %args = @_;
@@ -108,7 +142,12 @@ sub image_is_landscape {
     return [412, "Can't determine image width x height"] unless $width && $height;
     my $is_landscape = ($orientation =~ /\A(left|right)_/ ? 1:0) ^ ($width <= $height ? 1:0) ? 0:1;
 
-    [200, "OK", $is_landscape, {'cmdline.exit_code' => $is_landscape ? 0:1, 'cmdline.result' => ''}];
+    [200, "OK", $is_landscape, {
+        'cmdline.exit_code' => $is_landscape ? 0:1,
+        'cmdline.result' => $args{quiet} ? '' :
+            'Image is '.
+            ($is_landscape ? "landscape" : "NOT landscape (portrait)"),
+    }];
 }
 
 $SPEC{image_orientation} = {
