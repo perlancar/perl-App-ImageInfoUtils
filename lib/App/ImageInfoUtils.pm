@@ -10,6 +10,12 @@ use warnings;
 
 our %SPEC;
 
+$SPEC{':package'} = {
+    v => 1.1,
+    summary => 'Utilities related to getting (metadata) information from '.
+        'images',
+};
+
 our %arg0_files = (
     files => {
         'x.name.is_plural' => 1,
